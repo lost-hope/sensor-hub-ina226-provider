@@ -1,0 +1,9 @@
+{
+  "name": "sensor-hub-ina226-provider",
+  "build": {
+    "libArchive": false
+  },
+  "dependencies": {
+    "wollewald/INA226_WE": "^1.3.0"
+  }
+}
