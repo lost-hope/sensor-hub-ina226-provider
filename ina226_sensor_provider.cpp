@@ -47,6 +47,7 @@ class INA226SensorUsermod : public Usermod {
     uint16_t checkIntervalS = 10; // how often to read the sensor
     String namePrefix = "ina226"; // sensor names become "<prefix>_voltage/_current/_power"
     uint8_t precision = 3;        // decimal places published for all three readings
+    uint8_t priority = 100;       // getValue() selection priority - lower wins among sensors of the same SensorType (see sensor_bus.h)
 
     static const char _name[];
     static const char _enabled[];
@@ -54,6 +55,7 @@ class INA226SensorUsermod : public Usermod {
     static const char _checkInterval[];
     static const char _namePrefix[];
     static const char _precision[];
+    static const char _priority[];
 
     bool probePresent() {
       Wire.beginTransmission(i2cAddress);
@@ -62,9 +64,9 @@ class INA226SensorUsermod : public Usermod {
 
     void registerSensors() {
       if (!hub || voltageHandle != SENSOR_HANDLE_INVALID) return; // already registered
-      voltageHandle = hub->registerSensor((namePrefix + "_voltage").c_str(), SensorType::VoltageV, nullptr, nullptr, precision);
-      currentHandle = hub->registerSensor((namePrefix + "_current").c_str(), SensorType::Current,  nullptr, nullptr, precision);
-      powerHandle   = hub->registerSensor((namePrefix + "_power").c_str(),   SensorType::Power,     nullptr, nullptr, precision);
+      voltageHandle = hub->registerSensor((namePrefix + "_voltage").c_str(), SensorType::VoltageV, nullptr, nullptr, precision, priority);
+      currentHandle = hub->registerSensor((namePrefix + "_current").c_str(), SensorType::Current,  nullptr, nullptr, precision, priority);
+      powerHandle   = hub->registerSensor((namePrefix + "_power").c_str(),   SensorType::Power,     nullptr, nullptr, precision, priority);
     }
 
     void setSensorsAvailable(bool available) {
@@ -131,6 +133,7 @@ class INA226SensorUsermod : public Usermod {
       top[FPSTR(_checkInterval)] = checkIntervalS;
       top[FPSTR(_namePrefix)] = namePrefix;
       top[FPSTR(_precision)] = precision;
+      top[FPSTR(_priority)] = priority;
     }
 
     bool readFromConfig(JsonObject& root) override {
@@ -141,6 +144,7 @@ class INA226SensorUsermod : public Usermod {
       configComplete &= getJsonValue(top[FPSTR(_checkInterval)], checkIntervalS);
       configComplete &= getJsonValue(top[FPSTR(_namePrefix)], namePrefix);
       configComplete &= getJsonValue(top[FPSTR(_precision)], precision);
+      configComplete &= getJsonValue(top[FPSTR(_priority)], priority);
       return configComplete;
     }
 
@@ -149,6 +153,7 @@ class INA226SensorUsermod : public Usermod {
       settingsScript.print(F("addInfo('INA226Sensor:checkInterval',1,'seconds between sensor reads');"));
       settingsScript.print(F("addInfo('INA226Sensor:namePrefix',1,'sensor names become &lt;prefix&gt;_voltage/_current/_power - must be unique across all sensor providers');"));
       settingsScript.print(F("addInfo('INA226Sensor:precision',1,'decimal places published for all three readings');"));
+      settingsScript.print(F("addInfo('INA226Sensor:priority',1,'getValue() selection priority - lower wins if another provider also registers a VoltageV/Current/Power sensor');"));
     }
 };
 
@@ -158,6 +163,7 @@ const char INA226SensorUsermod::_address[]       PROGMEM = "address";
 const char INA226SensorUsermod::_checkInterval[] PROGMEM = "checkInterval";
 const char INA226SensorUsermod::_namePrefix[]    PROGMEM = "namePrefix";
 const char INA226SensorUsermod::_precision[]     PROGMEM = "precision";
+const char INA226SensorUsermod::_priority[]      PROGMEM = "priority";
 
 static INA226SensorUsermod ina226_sensor;
 REGISTER_USERMOD(ina226_sensor);
