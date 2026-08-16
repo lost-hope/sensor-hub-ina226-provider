@@ -80,7 +80,11 @@ class INA226SensorUsermod : public Usermod {
     void setup() override {
       // I2C bus is configured (and Wire.begin() already called) via WLED's
       // own Config > LED Preferences page - nothing to do here if it's unset.
-      if (i2c_sda < 0 || i2c_scl < 0) { enabled = false; return; }
+      // Don't persist this into 'enabled' (the user's own on/off switch) -
+      // initDone (left false here) is what actually gates loop(), so a
+      // later pin fix takes effect on the next boot instead of staying
+      // stuck disabled.
+      if (i2c_sda < 0 || i2c_scl < 0) return;
       ina226 = INA226_WE(i2cAddress);
       sensorFound = probePresent();
       if (sensorFound) ina226.init();
